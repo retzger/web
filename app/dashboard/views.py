@@ -94,8 +94,9 @@ from .notifications import (
     maybe_market_to_github, maybe_market_to_slack, maybe_market_to_user_discord, maybe_market_to_user_slack,
 )
 from .utils import (
-    apply_new_bounty_deadline, get_bounty, get_bounty_id, get_context, get_unrated_bounties_count, get_web3,
-    has_tx_mined, re_market_bounty, record_user_action_on_interest, release_bounty_to_the_public, web3_process_bounty,
+    apply_new_bounty_deadline, get_bounty, get_bounty_id, get_context, get_etc_txn_status, get_unrated_bounties_count,
+    get_web3, has_tx_mined, re_market_bounty, record_user_action_on_interest, release_bounty_to_the_public,
+    web3_process_bounty,
 )
 
 logger = logging.getLogger(__name__)
@@ -2865,6 +2866,65 @@ def sync_web3(request):
 
     return JsonResponse(result, status=result['status'])
 
+
+# @require_POST
+# @csrf_exempt
+# @ratelimit(key='ip', rate='5/s', method=ratelimit.UNSAFE, block=True)
+def sync_etc(request):
+    """Sync up ETC chain to find transction status.
+
+    Returns:
+        JsonResponse: The JSON response following the web3 sync.
+
+    """
+
+    response = {
+        'status': '400',
+        'message': 'bad request'
+    }
+
+    # TODO: make into POST
+    txnid = request.GET.get('txnid', None)
+    bounty_id = request.GET.get('id', None)
+    network =  request.GET.get('network', 'mainnet')
+
+    # TODO: REMOVE
+    txnid = '0x30060f38c0e9e255061d1daf079d3707c640bfb540e207dbc6fc0e6e6d52ecd1'
+    bounty_id = 1
+
+    if not txnid:
+        response['message'] = 'error: transaction not provided'
+    elif not bounty_id:
+        response['message'] = 'error: issue url not provided'
+    elif network != 'mainnet':
+        response['message'] = 'error: etc syncs only on mainnet'
+    else:
+        # TODO: CHECK IF BOUNTY EXSISTS
+        # bounty = Bounty.object.get(pk=bounty_id)
+        # if not bounty:
+        #     response['message'] = f'error: bounty with key {bounty_id} does not exist'
+        # else:
+        #     print('bounty found') # wrap whole section below within else
+
+        transaction = get_etc_txn_status(txnid, network)
+        if not transaction:
+            logging.error('blockscout failed')
+            response = {
+                'status': 500,
+                'message': 'blockscout API call failed'
+            }
+        else:
+            response = {
+                'status': 200,
+                'message': 'success',
+                'id': bounty_id,
+                'bounty_url': '<bounty_url>',
+                'blockNumber': transaction['blockNumber'],
+                'confirmations': transaction['confirmations'],
+                'is_mined': transaction['has_mined']
+            }
+
+    return JsonResponse(response, status=response['status'])
 
 # LEGAL
 @xframe_options_exempt

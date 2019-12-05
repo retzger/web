@@ -20,12 +20,6 @@
   <a class="navbar-brand pt-0 pb-0" href="/bounties/funder">
     <img id="logo" src="{% static "v2/images/top-bar/bounties_desktop.svg" %}" height="35" alt="Logo" />
   </a>
-  {% if request.path|matches:"^\/((explorer)|(issue.*)|(.*new.*))$" %}
-    <div class="navbar-network ml-xl-5 py-1 px-2 hidden">
-      <i class="fas fa-circle pr-1"></i>
-      <span id="current-network"></span>
-    </div>
-  {% endif %}
   <div class="d-flex order-0 order-md-last">
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
     aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
